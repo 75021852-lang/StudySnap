@@ -1,0 +1,400 @@
+/* ── StudySnap Overlay Styles ────────────────────────────────────────────────
+   Injected into host pages. Every rule is scoped to #studysnap-overlay
+   and uses !important on layout-critical properties to resist page CSS.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Root container ──────────────────────────────────────────────────────── */
+
+#studysnap-overlay {
+  /* Position: fixed bottom-right — avoids overlap with the extension popup */
+  position: fixed    !important;
+  bottom:   24px     !important;
+  right:    20px     !important;
+  top:      auto     !important;
+  width:      370px    !important;
+  max-width:  calc(100vw - 40px) !important;
+  max-height: 70vh     !important;
+  z-index:    2147483647 !important; /* Maximum possible z-index */
+
+  /* Layout */
+  display:        flex          !important;
+  flex-direction: column        !important;
+  overflow:       hidden        !important;
+
+  /* Typography baseline */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+  font-size:   14px             !important;
+  line-height: 1.55             !important;
+  color:       #e8e8f5          !important;
+
+  /* Visuals */
+  background:    #0f0f1a        !important;
+  border:        1px solid #252540 !important;
+  border-radius: 16px           !important;
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.14),
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    0 32px 80px rgba(0, 0, 0, 0.55) !important;
+
+  /* Enter animation — slides up from the bottom */
+  opacity:   0                                    !important;
+  transform: translateY(20px) scale(0.97)         !important;
+  transition:
+    opacity   0.28s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Visible state — triggered by JS adding .ss-visible */
+#studysnap-overlay.ss-visible {
+  opacity:   1                       !important;
+  transform: translateY(0) scale(1)  !important;
+}
+
+/* ── Reset inherited styles on all children ──────────────────────────────── */
+
+#studysnap-overlay * {
+  box-sizing:  border-box    !important;
+  font-family: inherit       !important;
+  line-height: inherit       !important;
+  /* Do NOT reset color/background here — each element sets its own */
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
+#studysnap-overlay .ss-header {
+  display:         flex             !important;
+  align-items:     center           !important;
+  justify-content: space-between    !important;
+  padding:         13px 14px        !important;
+  background:      #13131e          !important;
+  border-bottom:   1px solid #1e1e32 !important;
+  flex-shrink:     0                !important;
+}
+
+#studysnap-overlay .ss-brand {
+  display:     flex   !important;
+  align-items: center !important;
+  gap:         7px    !important;
+}
+
+#studysnap-overlay .ss-brand-icon {
+  font-size: 16px !important;
+  filter: drop-shadow(0 0 7px rgba(99, 102, 241, 0.8)) !important;
+}
+
+#studysnap-overlay .ss-brand-name {
+  font-size:   14px   !important;
+  font-weight: 700    !important;
+  color:       #c0c0ee !important;
+  letter-spacing: -0.2px !important;
+}
+
+#studysnap-overlay .ss-close {
+  /* Reset button defaults */
+  appearance: none       !important;
+  border:     none       !important;
+  margin:     0          !important;
+  padding:    0          !important;
+  /* Actual styles */
+  display:         flex    !important;
+  align-items:     center  !important;
+  justify-content: center  !important;
+  width:           28px    !important;
+  height:          28px    !important;
+  background:      #1e1e32 !important;
+  border-radius:   8px     !important;
+  color:           #5a5a7a !important;
+  font-size:       20px    !important;
+  line-height:     1       !important;
+  cursor:          pointer !important;
+  transition: background 0.15s, color 0.15s !important;
+}
+
+#studysnap-overlay .ss-close:hover {
+  background: #2a2a42 !important;
+  color:      #d0d0f0 !important;
+}
+
+/* ── Body ────────────────────────────────────────────────────────────────── */
+
+#studysnap-overlay .ss-body {
+  padding:    16px     !important;
+  display:    flex     !important;
+  flex-direction: column !important;
+  gap:        16px     !important;
+  overflow-y: auto     !important;
+  flex:       1        !important;
+}
+
+/* Custom scrollbar inside the body */
+#studysnap-overlay .ss-body::-webkit-scrollbar       { width: 4px !important; }
+#studysnap-overlay .ss-body::-webkit-scrollbar-track  { background: transparent !important; }
+#studysnap-overlay .ss-body::-webkit-scrollbar-thumb  {
+  background:    #252540 !important;
+  border-radius: 4px     !important;
+}
+
+/* ── Section (Answer / Why) ──────────────────────────────────────────────── */
+
+#studysnap-overlay .ss-section {
+  display:        flex    !important;
+  flex-direction: column  !important;
+  gap:            6px     !important;
+}
+
+#studysnap-overlay .ss-label {
+  font-size:      10px  !important;
+  font-weight:    700   !important;
+  letter-spacing: 1.3px !important;
+  text-transform: uppercase !important;
+  color:          #44445e !important;
+  margin:         0       !important;
+  padding:        0       !important;
+}
+
+#studysnap-overlay .ss-answer-header {
+  display:         flex          !important;
+  align-items:     center        !important;
+  justify-content: space-between !important;
+  margin-bottom:   2px           !important;
+}
+
+#studysnap-overlay .ss-copy-btn {
+  /* Reset */
+  appearance: none  !important;
+  margin:     0     !important;
+  /* Styles */
+  font-size:      10px    !important;
+  font-weight:    650     !important;
+  font-family:    inherit !important;
+  letter-spacing: 0.4px   !important;
+  color:          #5050a0 !important;
+  background:     none    !important;
+  border:         1px solid #252540 !important;
+  border-radius:  6px     !important;
+  padding:        2px 9px !important;
+  cursor:         pointer !important;
+  transition: color 0.15s, border-color 0.15s, background 0.15s !important;
+}
+
+#studysnap-overlay .ss-copy-btn:hover {
+  color:        #818cf8                      !important;
+  border-color: #6366f1                      !important;
+  background:   rgba(99, 102, 241, 0.08)    !important;
+}
+
+#studysnap-overlay .ss-copy-btn.ss-copy-success {
+  color:        #22c55e                      !important;
+  border-color: #22c55e                      !important;
+  background:   rgba(34, 197, 94, 0.08)     !important;
+}
+
+#studysnap-overlay .ss-answer-text {
+  font-size:   15px    !important;
+  font-weight: 650     !important;
+  color:       #f0f0ff !important;
+  line-height: 1.5     !important;
+}
+
+#studysnap-overlay .ss-why-text {
+  font-size:   13.5px  !important;
+  color:       #a8a8cc !important;
+  line-height: 1.65    !important;
+}
+
+/* "Select on page" tag shown for multiple-choice / true-false answers */
+#studysnap-overlay .ss-answer-tag {
+  font-size:      10px    !important;
+  font-weight:    600     !important;
+  letter-spacing: 0.3px   !important;
+  color:          #5050a0 !important;
+  background:     rgba(99, 102, 241, 0.08) !important;
+  border:         1px solid #252550        !important;
+  border-radius:  6px     !important;
+  padding:        2px 9px !important;
+}
+
+/* Answer text when the student needs to TYPE it */
+#studysnap-overlay .ss-answer-type {
+  background:    rgba(99, 102, 241, 0.07) !important;
+  border:        1px solid #2a2a50        !important;
+  border-radius: 8px                      !important;
+  padding:       8px 10px                 !important;
+  font-family:   'SF Mono', 'Fira Code', 'Menlo', monospace !important;
+  font-size:     14px                     !important;
+  letter-spacing: 0.1px                  !important;
+}
+
+/* Answer text when the student needs to SELECT an option */
+#studysnap-overlay .ss-answer-select {
+  color: #c8c8ff !important;
+}
+
+/* ── Deep Explanation expand button ─────────────────────────────────────── */
+
+#studysnap-overlay .ss-expand-btn {
+  /* Reset button defaults */
+  appearance: none  !important;
+  margin:     0     !important;
+  /* Actual styles */
+  display:     flex    !important;
+  align-items: center  !important;
+  gap:         8px     !important;
+  width:       100%    !important;
+  padding:     10px 12px !important;
+  background:  #13131e   !important;
+  border:      1px solid #252540 !important;
+  border-radius: 10px   !important;
+  color:       #7070aa  !important;
+  font-size:   13px     !important;
+  font-weight: 500      !important;
+  cursor:      pointer  !important;
+  text-align:  left     !important;
+  transition: background 0.15s, border-color 0.15s, color 0.15s !important;
+}
+
+#studysnap-overlay .ss-expand-btn:hover {
+  background:   #1a1a2e !important;
+  border-color: #6366f1 !important;
+  color:        #a0a0d8 !important;
+}
+
+#studysnap-overlay .ss-expand-icon {
+  font-size: 15px !important;
+}
+
+#studysnap-overlay .ss-chevron {
+  margin-left: auto    !important;
+  font-size:   12px    !important;
+  display:     inline-block !important;
+  transition:  transform 0.22s ease !important;
+}
+
+/* ── Deep explanation panel (collapsed by default) ──────────────────────── */
+
+#studysnap-overlay .ss-deep-panel {
+  display:       none     !important; /* toggled to block by .ss-deep-open */
+  padding:       12px     !important;
+  background:    #0a0a12  !important;
+  border:        1px solid #1e1e30 !important;
+  border-radius: 10px     !important;
+  font-size:     13px     !important;
+  color:         #8888b0  !important;
+  line-height:   1.7      !important;
+}
+
+#studysnap-overlay .ss-deep-panel.ss-deep-open {
+  display: block !important;
+}
+
+/* ── Confidence section ──────────────────────────────────────────────────── */
+
+#studysnap-overlay .ss-conf-section {
+  display:        flex    !important;
+  flex-direction: column  !important;
+  gap:            8px     !important;
+  padding-top:    14px    !important;
+  border-top:     1px solid #1e1e32 !important;
+}
+
+#studysnap-overlay .ss-conf-row {
+  display:         flex             !important;
+  justify-content: space-between    !important;
+  align-items:     center           !important;
+}
+
+#studysnap-overlay .ss-conf-value {
+  font-size:   16px !important;
+  font-weight: 700  !important;
+}
+
+#studysnap-overlay .ss-conf-track {
+  height:        6px      !important;
+  background:    #1e1e32  !important;
+  border-radius: 100px    !important;
+  overflow:      hidden   !important;
+}
+
+#studysnap-overlay .ss-conf-fill {
+  height:        100%      !important;
+  border-radius: 100px     !important;
+  width:         0%        !important; /* animated via JS after overlay enters */
+  transition:    width 0.75s cubic-bezier(0.4, 0, 0.2, 1) 0.25s !important;
+}
+
+#studysnap-overlay .ss-conf-label {
+  font-size:   11px  !important;
+  font-weight: 600   !important;
+  text-align:  right !important;
+  letter-spacing: 0.2px !important;
+}
+
+/* ── Feedback row (thumbs up / down) ────────────────────────────────────── */
+
+#studysnap-overlay .ss-feedback-row {
+  display:         flex             !important;
+  align-items:     center           !important;
+  justify-content: space-between    !important;
+  padding-top:     12px             !important;
+  border-top:      1px solid #1e1e32 !important;
+  gap:             10px             !important;
+}
+
+#studysnap-overlay .ss-feedback-label {
+  font-size:      11px    !important;
+  color:          #44445e !important;
+  font-weight:    500     !important;
+  transition:     color 0.2s !important;
+  flex:           1       !important;
+}
+
+#studysnap-overlay .ss-feedback-btns {
+  display: flex   !important;
+  gap:     6px    !important;
+  flex-shrink: 0  !important;
+}
+
+#studysnap-overlay .ss-thumb {
+  /* Reset button */
+  appearance: none  !important;
+  border:     none  !important;
+  margin:     0     !important;
+  /* Styles */
+  display:         flex    !important;
+  align-items:     center  !important;
+  justify-content: center  !important;
+  width:           34px    !important;
+  height:          34px    !important;
+  font-size:       17px    !important;
+  background:      #1a1a2e !important;
+  border:          1px solid #252540 !important;
+  border-radius:   8px     !important;
+  cursor:          pointer  !important;
+  transition: background 0.18s, border-color 0.18s, opacity 0.18s, transform 0.12s !important;
+  line-height: 1 !important;
+}
+
+#studysnap-overlay .ss-thumb:hover {
+  background: #22223a !important;
+  transform:  scale(1.1) !important;
+}
+
+#studysnap-overlay .ss-thumb:active {
+  transform: scale(0.95) !important;
+}
+
+/* Selected states */
+#studysnap-overlay .ss-thumb-active-up {
+  background:   rgba(34, 197, 94, 0.15)  !important;
+  border-color: #22c55e                  !important;
+}
+
+#studysnap-overlay .ss-thumb-active-down {
+  background:   rgba(248, 113, 113, 0.15) !important;
+  border-color: #f87171                   !important;
+}
+
+/* The unselected button after one is chosen */
+#studysnap-overlay .ss-thumb-dimmed {
+  opacity: 0.28 !important;
+}

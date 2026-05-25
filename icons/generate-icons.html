@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>StudySnap — Generate Icons</title>
+  <style>
+    body {
+      background: #0d0d14;
+      color: #e8e8f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      padding: 32px;
+      max-width: 480px;
+    }
+    h2  { margin-bottom: 6px; font-size: 20px; }
+    p   { color: #6b6b8a; font-size: 13px; margin-bottom: 24px; line-height: 1.6; }
+    ul  { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+    li a {
+      display: inline-block;
+      padding: 10px 18px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    li a:hover { opacity: 0.85; }
+    canvas { display: none; }
+    .preview { display: flex; gap: 16px; align-items: flex-end; margin-bottom: 24px; }
+    .preview canvas { display: block !important; border-radius: 12px; }
+  </style>
+</head>
+<body>
+  <h2>⚡ StudySnap Icon Generator</h2>
+  <p>
+    Open this file in any browser. Click each button to download the icon,
+    then save the files into the <code>icons/</code> folder next to this file.
+  </p>
+
+  <!-- Live preview of the 128px icon -->
+  <div class="preview" id="preview"></div>
+
+  <ul id="links"></ul>
+
+  <!-- Off-screen master canvas -->
+  <canvas id="master" width="128" height="128"></canvas>
+
+  <script>
+    const master = document.getElementById('master');
+    const ctx    = master.getContext('2d');
+
+    // Draw the icon at 128×128 on the master canvas
+    function drawIcon() {
+      const size = 128;
+      ctx.clearRect(0, 0, size, size);
+
+      // Rounded square background
+      const grad = ctx.createLinearGradient(0, 0, size, size);
+      grad.addColorStop(0, '#6366f1');
+      grad.addColorStop(1, '#8b5cf6');
+
+      ctx.beginPath();
+      // roundRect is supported in modern browsers
+      ctx.roundRect(0, 0, size, size, 26);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Inner glow ring
+      ctx.beginPath();
+      ctx.roundRect(4, 4, size - 8, size - 8, 22);
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Lightning bolt emoji centered
+      ctx.font      = '68px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚡', size / 2, size / 2 + 3);
+    }
+
+    // Scale master canvas down to a given size and return data URL
+    function getDataUrl(size) {
+      const c   = document.createElement('canvas');
+      c.width   = size;
+      c.height  = size;
+      c.getContext('2d').drawImage(master, 0, 0, size, size);
+      return c.toDataURL('image/png');
+    }
+
+    drawIcon();
+
+    // Show a 64px preview so the user can see what the icon looks like
+    const preview64 = document.createElement('canvas');
+    preview64.width  = 64;
+    preview64.height = 64;
+    preview64.title  = '64px preview';
+    preview64.getContext('2d').drawImage(master, 0, 0, 64, 64);
+    document.getElementById('preview').appendChild(preview64);
+
+    // Generate download links for each required size
+    const links = document.getElementById('links');
+    [16, 48, 128].forEach(size => {
+      const dataUrl = getDataUrl(size);
+      const li = document.createElement('li');
+      const a  = document.createElement('a');
+      a.href     = dataUrl;
+      a.download = `icon${size}.png`;
+      a.textContent = `⬇  Download icon${size}.png  (${size}×${size})`;
+      li.appendChild(a);
+      links.appendChild(li);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudySnap</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════
+       VIEW 1 — Main
+       ════════════════════════════════════════ -->
+  <div id="viewMain" class="view">
+    <div class="app">
+
+      <div class="header">
+        <div class="header-row">
+          <div class="logo">
+            <span class="logo-icon">⚡</span>
+            <span class="logo-text">StudySnap</span>
+          </div>
+          <div class="header-actions">
+            <button class="icon-btn" id="historyBtn" title="Answer history">📋</button>
+            <button class="icon-btn" id="gearBtn"    title="Settings">⚙</button>
+          </div>
+        </div>
+        <p class="subtitle">AI study assistant</p>
+      </div>
+
+      <div class="main">
+        <button class="capture-btn" id="captureBtn">
+          <span class="btn-icon">📸</span>
+          <span class="btn-text">Capture Question</span>
+        </button>
+
+        <div class="loading" id="loading" hidden>
+          <div class="spinner"></div>
+          <span>Analyzing your question…</span>
+        </div>
+
+        <p class="status" id="status"></p>
+      </div>
+
+      <div class="footer">Study smarter — not just faster</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       VIEW 2 — History
+       ════════════════════════════════════════ -->
+  <div id="viewHistory" class="view" hidden>
+    <div class="app">
+
+      <div class="header">
+        <div class="header-row">
+          <button class="icon-btn back-btn" id="historyBackBtn" title="Back">←</button>
+          <span class="settings-title">Answer History</span>
+          <button class="clear-btn" id="clearHistoryBtn" title="Clear all history">🗑</button>
+        </div>
+      </div>
+
+      <div class="history-body" id="historyList">
+        <!-- populated by JS -->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       VIEW 3 — Settings
+       ════════════════════════════════════════ -->
+  <div id="viewSettings" class="view" hidden>
+    <div class="app">
+
+      <div class="header">
+        <div class="header-row">
+          <button class="icon-btn back-btn" id="backBtn" title="Back">←</button>
+          <span class="settings-title">Settings</span>
+          <span class="logo-icon-sm">⚡</span>
+        </div>
+      </div>
+
+      <div class="settings-body">
+
+        <div class="field-group">
+          <label class="field-label" for="providerSelect">AI Provider</label>
+          <div class="select-wrap">
+            <select id="providerSelect" class="field-select">
+              <option value="openai">OpenAI — GPT-4o</option>
+              <option value="anthropic">Anthropic — Claude</option>
+            </select>
+            <span class="select-arrow" aria-hidden="true">▾</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label-row">
+            <label class="field-label" for="apiKeyInput">API Key</label>
+            <span class="key-badge" id="keySavedBadge" hidden>✓ Saved</span>
+          </div>
+          <div class="key-field">
+            <input
+              type="password"
+              id="apiKeyInput"
+              class="field-input key-input"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="Paste your API key here"
+            />
+            <button class="toggle-vis-btn" id="toggleVisBtn">Show</button>
+          </div>
+          <p class="field-hint">Stored on this device only — never sent anywhere except the AI provider.</p>
+        </div>
+
+        <button class="save-btn" id="saveBtn">Save Settings</button>
+        <p class="settings-status" id="settingsStatus"></p>
+
+        <div class="help-links">
+          <p class="help-title">Get your API key:</p>
+          <a class="help-link" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">
+            ↗ OpenAI — platform.openai.com/api-keys
+          </a>
+          <a class="help-link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">
+            ↗ Anthropic — console.anthropic.com
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="utils.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

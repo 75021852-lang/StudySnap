@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+._*
+
+# Chrome extension — never commit real keys
+*.env
+secrets.*
+
+# Build artifacts (none right now, but just in case)
+dist/
+node_modules/
