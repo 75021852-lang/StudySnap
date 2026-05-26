@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudySnap — Privacy Policy</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #07070e;
+      color: #f1f5f9;
+      line-height: 1.75;
+      padding: 60px 24px;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; }
+    h2 { font-size: 1.15rem; font-weight: 700; margin: 32px 0 10px; color: #38bdf8; }
+    p, li { color: #94a3b8; font-size: 0.97rem; margin-bottom: 10px; }
+    ul { padding-left: 20px; margin-bottom: 10px; }
+    .meta { color: #64748b; font-size: 0.85rem; margin-bottom: 40px; }
+    a { color: #38bdf8; }
+    code { background: rgba(56,189,248,0.08); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>StudySnap — Privacy Policy</h1>
+    <p class="meta">Last updated: May 25, 2026</p>
+
+    <p>StudySnap is a Chrome extension that helps students answer study and quiz questions using AI. This policy explains exactly what data is accessed, how it is used, and what we never do.</p>
+
+    <h2>What data we access</h2>
+    <ul>
+      <li><strong>Screenshots:</strong> When you click "Capture Question", StudySnap captures a screenshot of the tab you are currently viewing. This image is used only to identify the question on screen and is sent directly to the AI provider you configured.</li>
+      <li><strong>Your API key:</strong> You provide your own OpenAI or Anthropic API key. It is stored locally on your device using <code>chrome.storage.local</code> and sent only to the AI provider you chose — never to any StudySnap server.</li>
+      <li><strong>Answer history:</strong> A local log of your captured questions and answers is stored on your device only. It is never uploaded or shared.</li>
+    </ul>
+
+    <h2>How your data is used</h2>
+    <ul>
+      <li>Screenshots are sent directly from your browser to OpenAI or Anthropic using your own API key. StudySnap has no servers and never sees or stores your screenshots.</li>
+      <li>The AI provider processes your data under their own privacy policy: <a href="https://openai.com/privacy" target="_blank">OpenAI Privacy Policy</a> / <a href="https://www.anthropic.com/privacy" target="_blank">Anthropic Privacy Policy</a>.</li>
+      <li>FlowForge (the developer) collects no data whatsoever.</li>
+    </ul>
+
+    <h2>What we never do</h2>
+    <ul>
+      <li>We never collect, store, or transmit your screenshots to any server we control.</li>
+      <li>We never sell or share any data with third parties.</li>
+      <li>We never track your browsing history or activity.</li>
+      <li>We never access any tab other than the one you are actively viewing when you click Capture.</li>
+    </ul>
+
+    <h2>Local data storage</h2>
+    <p>All data (API key, answer history, settings) is stored locally on your device using <code>chrome.storage.local</code>. You can delete all stored data at any time from the History tab inside the extension, or by uninstalling StudySnap.</p>
+
+    <h2>Permissions explained</h2>
+    <ul>
+      <li><strong>activeTab:</strong> Captures a screenshot of the tab you are currently viewing — only when you click the extension button.</li>
+      <li><strong>scripting:</strong> Injects the answer overlay onto the page so the answer appears directly on screen.</li>
+      <li><strong>storage:</strong> Saves your API key, provider choice, and answer history locally on your device only.</li>
+    </ul>
+
+    <h2>Children's privacy</h2>
+    <p>StudySnap does not knowingly collect any personal information from anyone. All processing happens locally on your device or through your own AI provider account.</p>
+
+    <h2>Contact</h2>
+    <p>Questions? Email us at <a href="mailto:reynolrojasv@gmail.com">reynolrojasv@gmail.com</a></p>
+  </div>
+</body>
+</html>
