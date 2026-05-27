@@ -153,33 +153,44 @@
     const copyBtn = root.querySelector('.ss-copy-btn');
     if (copyBtn) {
       if (isWriting) {
-        // Copy both rich HTML (for rich text editors) and plain text fallback
-        copyBtn.addEventListener('click', async () => {
+        copyBtn.addEventListener('click', () => {
           const html  = answerEl.innerHTML;
           const plain = answerEl.textContent;
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({
-                'text/html':  new Blob([html],  { type: 'text/html' }),
-                'text/plain': new Blob([plain], { type: 'text/plain' }),
-              }),
-            ]);
+
+          // Use a hidden contenteditable element so the browser copies rich HTML
+          // (colors, bold, underline) — works without clipboard-write permission.
+          const tmp = document.createElement('div');
+          tmp.setAttribute('contenteditable', 'true');
+          tmp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;';
+          tmp.innerHTML = html;
+          document.body.appendChild(tmp);
+
+          const range = document.createRange();
+          range.selectNodeContents(tmp);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+
+          const ok = document.execCommand('copy');
+          sel.removeAllRanges();
+          document.body.removeChild(tmp);
+
+          if (ok) {
             copyBtn.textContent = '✓ Copied!';
             copyBtn.classList.add('ss-copy-success');
             setTimeout(() => {
               copyBtn.innerHTML = '&#x1F4CB; Copy';
               copyBtn.classList.remove('ss-copy-success');
             }, 2000);
-          } catch {
-            // Fallback to plain text
-            try {
-              await navigator.clipboard.writeText(plain);
+          } else {
+            // execCommand failed — fall back to plain text via Clipboard API
+            navigator.clipboard.writeText(plain).then(() => {
               copyBtn.textContent = '✓ Text copied';
               setTimeout(() => { copyBtn.innerHTML = '&#x1F4CB; Copy'; }, 2000);
-            } catch {
-              copyBtn.textContent = 'Failed';
+            }).catch(() => {
+              copyBtn.textContent = '✗ Failed';
               setTimeout(() => { copyBtn.innerHTML = '&#x1F4CB; Copy'; }, 1500);
-            }
+            });
           }
         });
       } else {
