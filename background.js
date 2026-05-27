@@ -1,12 +1,12 @@
 // background.js — StudySnap Service Worker
 //
 // Flow:
-//   popup.js  →  [captureAndAnalyze]  →  background.js
-//                                            │ captureVisibleTab
-//                                            │ analyzeWithAI  (OpenAI or Anthropic)
-//                                            │ inject content.js + overlay.css
-//                                            ↓
-//                                         content.js  →  overlay shown on page
+//   popup.js  ->  [captureAndAnalyze]  ->  background.js
+//                                            | captureVisibleTab
+//                                            | analyzeWithAI  (OpenAI or Anthropic)
+//                                            | inject content.js + overlay.css
+//                                            v
+//                                         content.js  ->  overlay shown on page
 
 // ── Message listener ──────────────────────────────────────────
 
@@ -88,7 +88,7 @@ async function callOpenAI(screenshotDataUrl, apiKey) {
     },
     body: JSON.stringify({
       model: 'gpt-4o',
-      max_tokens: 700,
+      max_tokens: 1200,
       messages: [{
         role: 'user',
         content: [
@@ -114,14 +114,14 @@ async function callAnthropic(screenshotDataUrl, apiKey) {
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'Content-Type':                          'application/json',
-      'x-api-key':                             apiKey,
-      'anthropic-version':                     '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true', // required for Chrome extension / browser contexts
+      'Content-Type':                              'application/json',
+      'x-api-key':                                 apiKey,
+      'anthropic-version':                         '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 700,
+      max_tokens: 1200,
       messages: [{
         role: 'user',
         content: [
@@ -145,7 +145,8 @@ async function callAnthropic(screenshotDataUrl, apiKey) {
 
 const STUDY_PROMPT = `You are a helpful study assistant analyzing a screenshot of a study or quiz page.
 
-STEP 1 — Identify the question type:
+STEP 1 - Identify the question type:
+- WRITING ASSIGNMENT: asks the student to write a paragraph or essay, especially when formatting requirements are listed (highlight colors, bold, underline, color-code by grammar type)
 - MULTIPLE CHOICE: options labeled A/B/C/D or listed as radio buttons
 - TRUE / FALSE: only two options: True and False
 - FILL-IN-THE-BLANK: a sentence with a blank/gap the student must complete
@@ -153,30 +154,44 @@ STEP 1 — Identify the question type:
 - SHORT ANSWER / OPEN TEXT: an empty text box with no sentence stem
 - MATCHING / OTHER: anything else
 
-STEP 2 — Pick the FIRST unanswered question (no checkmark, no selection, no "correct/incorrect" banner).
+STEP 2 - Pick the FIRST unanswered question (no checkmark, no selection, no "correct/incorrect" banner).
 
-STEP 3 — Format the answer based on type:
+STEP 3 - Format the answer based on type:
 
-• MULTIPLE CHOICE → answer is the option letter + text, e.g. "B) The mitochondria"
-• TRUE / FALSE → answer is just "True" or "False"
-• FILL-IN-THE-BLANK / SENTENCE COMPLETION → answer is ONLY the words that go in the blank, written so they fit naturally inside the sentence. Do NOT repeat the whole sentence. The completion must make the FULL sentence feel like a meaningful, coherent thought — avoid vague or tautological fillers like "something happened" or "things were different." Use context clues in the sentence to infer a specific, logical completion. Example: if the sentence is "I ate dinner at 6 pm, but before that ___", the answer should be "I had eaten lunch" — not "I had eaten lunch at 6 pm. The past perfect is used because..."
-• SHORT ANSWER → a concise, complete sentence that directly answers the question
-• If no unanswered question is visible → set confidence to 0
+* WRITING ASSIGNMENT -> Write a complete, high-quality paragraph (8+ sentences) that fully answers the prompt. Read ALL formatting requirements visible on screen and apply every one using ONLY these HTML tags:
+  - Topic sentence                      -> <u>sentence</u>
+  - Subordinate conjunctions            -> <span class="ss-blue">word or phrase</span>
+    (although, because, since, while, if, when, as, unless, until, after, before, even though)
+  - Coordinate conjunctions             -> <span class="ss-green">word</span>
+    (for, and, nor, but, or, yet, so -- only when joining two independent clauses)
+  - Transitional adverbs                -> <span class="ss-red">word</span>
+    (furthermore, however, therefore, moreover, consequently, nevertheless, additionally, finally, meanwhile, thus)
+  - Words/phrases showing tense variety -> <strong>word or phrase</strong>
+    (mix past simple, past perfect, present perfect, and future naturally)
+  Each required element must appear at least twice. Every sentence must flow logically.
+  Return the full formatted HTML paragraph as the "answer" field. Use NO other HTML tags.
 
-Respond with ONLY a valid JSON object — no markdown, no extra text:
+* MULTIPLE CHOICE -> answer is the option letter + text, e.g. "B) The mitochondria"
+* TRUE / FALSE -> answer is just "True" or "False"
+* FILL-IN-THE-BLANK / SENTENCE COMPLETION -> answer is ONLY the words that go in the blank, written so they fit naturally inside the sentence. Do NOT repeat the whole sentence. The completion must make the FULL sentence feel like a meaningful, coherent thought -- avoid vague or tautological fillers. Use context clues to infer a specific, logical completion.
+* SHORT ANSWER -> a concise, complete sentence that directly answers the question
+* If no unanswered question is visible -> set confidence to 0
+
+Respond with ONLY a valid JSON object -- no markdown, no extra text:
 {
   "questionType": "select",
-  "answer": "The text to type or select — formatted for the question type as described above",
-  "why": "A 1–2 sentence explanation of why this answer is correct",
-  "deepExplanation": "A deeper explanation to help the student truly understand the concept (2–4 sentences)",
+  "answer": "The answer -- for writing assignments use the HTML formatting tags described above",
+  "why": "A 1-2 sentence explanation of why this answer is correct",
+  "deepExplanation": "A deeper explanation to help the student truly understand the concept (2-4 sentences)",
   "confidence": 85
 }
 
 "questionType" must be one of:
-- "select"  → multiple choice or true/false (student clicks an existing option)
-- "type"    → fill-in-the-blank, sentence completion, or open short-answer (student types text)
+- "select"   -> multiple choice or true/false (student clicks an existing option)
+- "type"     -> fill-in-the-blank, sentence completion, or open short-answer (student types text)
+- "writing"  -> full paragraph/essay assignment with formatting requirements
 
-If no unanswered question is visible, set confidence to 0 and answer: "No unanswered question detected — scroll to the next question and try again."`;
+If no unanswered question is visible, set confidence to 0 and answer: "No unanswered question detected -- scroll to the next question and try again."`;
 
 // ── Response parsing ──────────────────────────────────────────
 
@@ -187,11 +202,11 @@ function parseAIResponse(text) {
     .replace(/\s*```$/i, '')
     .trim();
 
-  const parsed = JSON.parse(cleaned); // throws on invalid JSON — caught upstream
+  const parsed = JSON.parse(cleaned); // throws on invalid JSON -- caught upstream
 
-  // Normalise questionType — default to 'select' so unknown values degrade gracefully
+  // Normalise questionType -- default to 'select' so unknown values degrade gracefully
   const rawType    = String(parsed.questionType ?? '').toLowerCase();
-  const questionType = rawType === 'type' ? 'type' : 'select';
+  const questionType = ['type', 'writing'].includes(rawType) ? rawType : 'select';
 
   return {
     questionType,
@@ -209,11 +224,12 @@ async function saveToHistory(result, id = Date.now()) {
     const { studysnap_history: history = [] } = await chrome.storage.local.get('studysnap_history');
     const entry = {
       id,
-      ts:         id,
-      answer:     result.answer,
-      why:        result.why,
-      confidence: result.confidence,
-      feedback:   null,   // filled in by saveFeedback when user taps 👍 or 👎
+      ts:           id,
+      questionType: result.questionType,
+      answer:       result.answer,
+      why:          result.why,
+      confidence:   result.confidence,
+      feedback:     null,
     };
     const updated = [entry, ...history].slice(0, 50);
     await chrome.storage.local.set({ studysnap_history: updated });
@@ -236,7 +252,6 @@ async function updateHistoryFeedback(entryId, feedback) {
 
 async function assertResponseOK(response) {
   if (response.ok) return;
-  // Try to extract the API's own error message
   const body = await response.json().catch(() => ({}));
   const msg  = body.error?.message || `API error ${response.status}`;
   throw new Error(msg);
@@ -250,10 +265,10 @@ function friendlyError(raw = '') {
   const r = raw.toLowerCase();
 
   if (raw === 'NO_API_KEY') {
-    return 'No API key saved — click ⚙ in the popup to add yours.';
+    return 'No API key saved -- click the gear icon in the popup to add yours.';
   }
   if (raw.includes('401') || r.includes('unauthorized') || r.includes('invalid api key') || r.includes('authentication')) {
-    return 'Invalid API key. Open ⚙ Settings to check it.';
+    return 'Invalid API key. Open Settings to check it.';
   }
   if (raw.includes('429') || r.includes('rate limit') || r.includes('quota') || r.includes('too many requests')) {
     return 'Rate limit reached. Wait a moment and try again.';
@@ -262,13 +277,13 @@ function friendlyError(raw = '') {
     return 'Quota or credit limit reached. Add billing credits to your AI provider account.';
   }
   if (r.includes('dangerous-direct-browser-access') || r.includes('cors')) {
-    return 'Anthropic browser header missing — please reload the extension and try again.';
+    return 'Anthropic browser header missing -- please reload the extension and try again.';
   }
   if (r.includes('overloaded') || r.includes('capacity') || r.includes('529')) {
     return 'Claude is overloaded right now. Wait a moment and try again.';
   }
   if ((r.includes('model') && (r.includes('not found') || r.includes('unknown') || r.includes('invalid'))) || raw.includes('404')) {
-    return 'Model not found. Try reloading the extension — Settings may need to be re-saved.';
+    return 'Model not found. Try reloading the extension -- Settings may need to be re-saved.';
   }
   if (r.includes('json') || r.includes('unexpected token') || r.includes('syntaxerror')) {
     return 'AI returned an unexpected response format. Try again.';
@@ -280,9 +295,8 @@ function friendlyError(raw = '') {
     return 'This page blocks script injection. Try a different website.';
   }
   if (r.includes('failed to fetch') || r.includes('networkerror') || r.includes('load failed')) {
-    return 'Network error — check your internet connection.';
+    return 'Network error -- check your internet connection.';
   }
-  // Log the raw error to the service worker console for easier debugging
   console.warn('[StudySnap] Unmatched error:', raw);
   return `Error: ${raw.slice(0, 80) || 'Something went wrong. Please try again.'}`;
 }

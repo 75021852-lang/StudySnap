@@ -7,8 +7,8 @@
   if (window.__studySnapLoaded) return;
   window.__studySnapLoaded = true;
 
-  let overlayEl     = null;
-  let currentEntryId = null; // tracks which history entry this overlay belongs to
+  let overlayEl      = null;
+  let currentEntryId = null;
 
   // ── Listen for messages from the background service worker ──────────────────
 
@@ -50,8 +50,9 @@
 
   function buildOverlay(data) {
     const { answer, why, deepExplanation, confidence, questionType } = data;
-    const conf   = confidenceInfo(confidence);
-    const isType = questionType === 'type'; // true = student must type; false = student selects
+    const conf      = confidenceInfo(confidence);
+    const isType    = questionType === 'type';
+    const isWriting = questionType === 'writing';
 
     const root = document.createElement('div');
     root.id = 'studysnap-overlay';
@@ -59,23 +60,33 @@
     root.innerHTML = `
       <div class="ss-header">
         <div class="ss-brand">
-          <span class="ss-brand-icon">⚡</span>
+          <span class="ss-brand-icon">&#x26A1;</span>
           <span class="ss-brand-name">StudySnap</span>
         </div>
-        <button class="ss-close" aria-label="Close StudySnap">×</button>
+        <button class="ss-close" aria-label="Close StudySnap">&times;</button>
       </div>
 
       <div class="ss-body">
 
         <div class="ss-section">
           <div class="ss-answer-header">
-            <div class="ss-label">Answer</div>
-            ${isType
-              ? `<button class="ss-copy-btn" title="Copy answer to clipboard">Copy</button>`
-              : `<span class="ss-answer-tag">Select on page</span>`
+            <div class="ss-label">${isWriting ? 'Your Paragraph' : 'Answer'}</div>
+            ${isWriting
+              ? `<button class="ss-copy-btn ss-copy-writing" title="Copy with formatting">&#x1F4CB; Copy</button>`
+              : isType
+                ? `<button class="ss-copy-btn" title="Copy answer to clipboard">Copy</button>`
+                : `<span class="ss-answer-tag">Select on page</span>`
             }
           </div>
-          <div class="ss-answer-text ${isType ? 'ss-answer-type' : 'ss-answer-select'}"></div>
+          <div class="ss-answer-text ${isWriting ? 'ss-answer-writing' : isType ? 'ss-answer-type' : 'ss-answer-select'}"></div>
+          ${isWriting ? `
+            <div class="ss-writing-legend">
+              <span class="ss-legend-item"><span class="ss-blue-sample">A</span> Subordinate conj.</span>
+              <span class="ss-legend-item"><span class="ss-green-sample">A</span> Coordinate conj.</span>
+              <span class="ss-legend-item"><span class="ss-red-sample">A</span> Transitional adv.</span>
+              <span class="ss-legend-item"><strong>Bold</strong> = Tenses &nbsp; <u>Underline</u> = Topic</span>
+            </div>
+          ` : ''}
         </div>
 
         <div class="ss-section">
@@ -85,9 +96,9 @@
 
         ${deepExplanation ? `
           <button class="ss-expand-btn" aria-expanded="false">
-            <span class="ss-expand-icon">📖</span>
+            <span class="ss-expand-icon">&#x1F4D6;</span>
             <span>Deep Explanation</span>
-            <span class="ss-chevron" aria-hidden="true">▾</span>
+            <span class="ss-chevron" aria-hidden="true">&#x25BE;</span>
           </button>
           <div class="ss-deep-panel" role="region"></div>
         ` : ''}
@@ -106,17 +117,23 @@
         <div class="ss-feedback-row">
           <span class="ss-feedback-label">Was this correct?</span>
           <div class="ss-feedback-btns">
-            <button class="ss-thumb ss-thumb-up"   aria-label="Yes, correct">👍</button>
-            <button class="ss-thumb ss-thumb-down" aria-label="No, incorrect">👎</button>
+            <button class="ss-thumb ss-thumb-up"   aria-label="Yes, correct">&#x1F44D;</button>
+            <button class="ss-thumb ss-thumb-down" aria-label="No, incorrect">&#x1F44E;</button>
           </div>
         </div>
 
       </div>
     `;
 
-    // ── Text content (XSS-safe) ────────────────────────────────────────────────
-    root.querySelector('.ss-answer-text').textContent = answer;
-    root.querySelector('.ss-why-text').textContent    = why;
+    // ── Answer content ─────────────────────────────────────────────────────────
+    const answerEl = root.querySelector('.ss-answer-text');
+    if (isWriting) {
+      answerEl.innerHTML = sanitizeWritingHTML(answer);
+    } else {
+      answerEl.textContent = answer;
+    }
+
+    root.querySelector('.ss-why-text').textContent = why;
     if (deepExplanation) root.querySelector('.ss-deep-panel').textContent = deepExplanation;
 
     // ── Confidence ─────────────────────────────────────────────────────────────
@@ -132,24 +149,57 @@
     // ── Close ──────────────────────────────────────────────────────────────────
     root.querySelector('.ss-close').addEventListener('click', closeOverlay);
 
-    // ── Copy answer to clipboard ───────────────────────────────────────────────
-   const copyBtn = root.querySelector('.ss-copy-btn');
-if (copyBtn) {
-  copyBtn.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(answer);
-      copyBtn.textContent = '✓ Copied!';
-      copyBtn.classList.add('ss-copy-success');
-      setTimeout(() => {
-        copyBtn.textContent = 'Copy';
-        copyBtn.classList.remove('ss-copy-success');
-      }, 2000);
-    } catch {
-      copyBtn.textContent = 'Failed';
-      setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+    // ── Copy button ────────────────────────────────────────────────────────────
+    const copyBtn = root.querySelector('.ss-copy-btn');
+    if (copyBtn) {
+      if (isWriting) {
+        // Copy both rich HTML (for rich text editors) and plain text fallback
+        copyBtn.addEventListener('click', async () => {
+          const html  = answerEl.innerHTML;
+          const plain = answerEl.textContent;
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                'text/html':  new Blob([html],  { type: 'text/html' }),
+                'text/plain': new Blob([plain], { type: 'text/plain' }),
+              }),
+            ]);
+            copyBtn.textContent = '✓ Copied!';
+            copyBtn.classList.add('ss-copy-success');
+            setTimeout(() => {
+              copyBtn.innerHTML = '&#x1F4CB; Copy';
+              copyBtn.classList.remove('ss-copy-success');
+            }, 2000);
+          } catch {
+            // Fallback to plain text
+            try {
+              await navigator.clipboard.writeText(plain);
+              copyBtn.textContent = '✓ Text copied';
+              setTimeout(() => { copyBtn.innerHTML = '&#x1F4CB; Copy'; }, 2000);
+            } catch {
+              copyBtn.textContent = 'Failed';
+              setTimeout(() => { copyBtn.innerHTML = '&#x1F4CB; Copy'; }, 1500);
+            }
+          }
+        });
+      } else {
+        // Plain text copy for type questions
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(answer);
+            copyBtn.textContent = '✓ Copied!';
+            copyBtn.classList.add('ss-copy-success');
+            setTimeout(() => {
+              copyBtn.textContent = 'Copy';
+              copyBtn.classList.remove('ss-copy-success');
+            }, 2000);
+          } catch {
+            copyBtn.textContent = 'Failed';
+            setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+          }
+        });
+      }
     }
-  });
-}
 
     // ── Deep explanation expand/collapse ───────────────────────────────────────
     const expandBtn = root.querySelector('.ss-expand-btn');
@@ -164,20 +214,18 @@ if (copyBtn) {
     }
 
     // ── Thumbs up / down feedback ──────────────────────────────────────────────
-    const thumbUp    = root.querySelector('.ss-thumb-up');
-    const thumbDown  = root.querySelector('.ss-thumb-down');
-    const feedLabel  = root.querySelector('.ss-feedback-label');
+    const thumbUp   = root.querySelector('.ss-thumb-up');
+    const thumbDown = root.querySelector('.ss-thumb-down');
+    const feedLabel = root.querySelector('.ss-feedback-label');
 
     function applyFeedback(type) {
-      // Visual state
-      thumbUp.classList.toggle('ss-thumb-active-up',   type === 'correct');
-      thumbUp.classList.toggle('ss-thumb-dimmed',      type === 'incorrect');
+      thumbUp.classList.toggle('ss-thumb-active-up',    type === 'correct');
+      thumbUp.classList.toggle('ss-thumb-dimmed',       type === 'incorrect');
       thumbDown.classList.toggle('ss-thumb-active-down', type === 'incorrect');
       thumbDown.classList.toggle('ss-thumb-dimmed',      type === 'correct');
       feedLabel.textContent = type === 'correct' ? '✓ Marked correct' : '✗ Marked incorrect';
       feedLabel.style.color = type === 'correct' ? '#22c55e' : '#f87171';
 
-      // Persist to history entry
       if (currentEntryId) {
         chrome.runtime.sendMessage({ action: 'saveFeedback', entryId: currentEntryId, feedback: type });
       }
@@ -189,12 +237,56 @@ if (copyBtn) {
     return root;
   }
 
+  // ── Writing HTML sanitizer ───────────────────────────────────────────────────
+  // Only allows: <u>, <strong>, <span class="ss-blue|ss-green|ss-red">
+  // Everything else is stripped to plain text — prevents XSS from AI output.
+
+  function sanitizeWritingHTML(dirty) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = dirty;
+
+    function cleanNode(node) {
+      if (node.nodeType === Node.TEXT_NODE) return node.cloneNode();
+      if (node.nodeType !== Node.ELEMENT_NODE) return null;
+
+      const tag = node.tagName.toLowerCase();
+      let el;
+
+      if (tag === 'u' || tag === 'strong') {
+        el = document.createElement(tag);
+      } else if (tag === 'span') {
+        const cls = (node.getAttribute('class') || '').trim();
+        if (/^ss-(blue|green|red)$/.test(cls)) {
+          el = document.createElement('span');
+          el.className = cls;
+        } else {
+          el = document.createDocumentFragment(); // unwrap unknown spans
+        }
+      } else {
+        el = document.createDocumentFragment(); // strip unknown tags, keep text
+      }
+
+      for (const child of node.childNodes) {
+        const cleaned = cleanNode(child);
+        if (cleaned) el.appendChild(cleaned);
+      }
+      return el;
+    }
+
+    const out = document.createElement('div');
+    for (const child of tmp.childNodes) {
+      const cleaned = cleanNode(child);
+      if (cleaned) out.appendChild(cleaned);
+    }
+    return out.innerHTML;
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
   function confidenceInfo(score) {
     if (score >= 80) return { label: 'High confidence',   color: '#22c55e' };
     if (score >= 60) return { label: 'Medium confidence', color: '#f59e0b' };
-    return              { label: 'Low confidence',    color: '#ef4444' };
+    return                   { label: 'Low confidence',   color: '#ef4444' };
   }
 
 })();
